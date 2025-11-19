@@ -57,12 +57,10 @@ final class ProfileHeaderView: UIView {
         b.backgroundColor = .systemBlue
         b.layer.cornerRadius = 10
         b.layer.masksToBounds = false
-
         b.layer.shadowColor = UIColor.black.cgColor
         b.layer.shadowOpacity = 0.7
         b.layer.shadowOffset = CGSize(width: 4, height: 4)
         b.layer.shadowRadius = 4
-
         b.translatesAutoresizingMaskIntoConstraints = false
         b.addTarget(self, action: #selector(didTapSetStatus), for: .touchUpInside)
         return b
@@ -81,6 +79,11 @@ final class ProfileHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        avatarImageView.layer.cornerRadius = avatarImageView.bounds.width / 2
+    }
+
     private func setupSubviews() {
         addSubview(avatarImageView)
         addSubview(fullNameLabel)
@@ -91,43 +94,35 @@ final class ProfileHeaderView: UIView {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
+            // avatar
             avatarImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             avatarImageView.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             avatarImageView.widthAnchor.constraint(equalToConstant: 100),
-            avatarImageView.heightAnchor.constraint(equalToConstant: 100)
-        ])
+            avatarImageView.heightAnchor.constraint(equalToConstant: 100),
 
-        NSLayoutConstraint.activate([
+            // name
             fullNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 27),
             fullNameLabel.topAnchor.constraint(equalTo: avatarImageView.topAnchor, constant: 16),
-            fullNameLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16)
-        ])
+            fullNameLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
 
-        NSLayoutConstraint.activate([
+            // gray status
             statusLabel.leadingAnchor.constraint(equalTo: fullNameLabel.leadingAnchor),
             statusLabel.topAnchor.constraint(equalTo: fullNameLabel.bottomAnchor, constant: 8),
-            statusLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16)
-        ])
+            statusLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
 
-        NSLayoutConstraint.activate([
+            // text field
             statusTextField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             statusTextField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             statusTextField.topAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 16),
-            statusTextField.heightAnchor.constraint(equalToConstant: 40)
-        ])
+            statusTextField.heightAnchor.constraint(equalToConstant: 40),
 
-        NSLayoutConstraint.activate([
+            // button
             setStatusButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             setStatusButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             setStatusButton.topAnchor.constraint(equalTo: statusTextField.bottomAnchor, constant: 16),
             setStatusButton.heightAnchor.constraint(equalToConstant: 50),
             setStatusButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
         ])
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        avatarImageView.layer.cornerRadius = avatarImageView.bounds.width / 2
     }
 
     // MARK: - Actions

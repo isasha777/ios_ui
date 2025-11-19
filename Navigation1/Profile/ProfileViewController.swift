@@ -4,47 +4,33 @@ final class ProfileViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
 
-    // MARK: - Data source
-
     private let posts: [Post] = [
-        Post(
-            author: "vedmak.official",
-            description: "Новые кадры со съёмок второго сезона сериала «Ведьмак».",
-            image: "post_1",    // имя картинки в Assets.xcassets
-            likes: 240,
-            views: 312
-        ),
-        Post(
-            author: "netology.ru",
-            description: "Нетология. Меняем карьеру через образование.",
-            image: "post_2",
-            likes: 120,
-            views: 456
-        ),
-        Post(
-            author: "swift.dev",
-            description: "От «Hello, World» до первого сложного iOS-приложения — один курс.",
-            image: "post_3",
-            likes: 766,
-            views: 893
-        ),
-        Post(
-            author: "cat.content",
-            description: "Котики, код и кофе — идеальное комбо.",
-            image: "post_4",
-            likes: 999,
-            views: 1500
-        )
+        Post(author: "vedmak.official",
+             description: "Новые кадры со съёмок второго сезона сериала «Ведьмак».",
+             image: "post_1",
+             likes: 240,
+             views: 312),
+        Post(author: "netology.ru",
+             description: "Нетология. Меняем карьеру через образование.",
+             image: "post_2",
+             likes: 120,
+             views: 456),
+        Post(author: "swift.dev",
+             description: "От 'Hello, World' до первого сложного iOS-приложения — один курс.",
+             image: "post_3",
+             likes: 766,
+             views: 893),
+        Post(author: "cat.content",
+             description: "Котики, код и кофе — идеальное комбо.",
+             image: "post_4",
+             likes: 999,
+             views: 1500)
     ]
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         title = "Profile"
         view.backgroundColor = .systemBackground
-
         setupTableView()
     }
 
@@ -70,15 +56,14 @@ final class ProfileViewController: UIViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
-
 extension ProfileViewController: UITableViewDataSource {
 
     func numberOfSections(in tableView: UITableView) -> Int {
         1
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView,
+                   numberOfRowsInSection section: Int) -> Int {
         posts.count
     }
 
@@ -91,28 +76,21 @@ extension ProfileViewController: UITableViewDataSource {
             return UITableViewCell()
         }
 
-        let post = posts[indexPath.row]
-        cell.configure(with: post)
+        cell.configure(with: posts[indexPath.row])
         return cell
     }
 }
 
-// MARK: - UITableViewDelegate
-
 extension ProfileViewController: UITableViewDelegate {
 
-    // Header (ProfileHeaderView) для секции 0
     func tableView(_ tableView: UITableView,
                    viewForHeaderInSection section: Int) -> UIView? {
-        if section == 0 {
-            return ProfileHeaderView()
-        }
-        return nil
+        ProfileHeaderView()
     }
 
     func tableView(_ tableView: UITableView,
                    heightForHeaderInSection section: Int) -> CGFloat {
-        section == 0 ? 220 : 0
+        220
     }
 }
 

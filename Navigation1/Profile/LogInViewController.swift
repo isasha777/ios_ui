@@ -145,67 +145,55 @@ final class LogInViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // scrollView на весь экран
+            // scrollView
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // contentView внутри scrollView
+            // contentView
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
-        ])
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
 
-        // Логотип
-        NSLayoutConstraint.activate([
+            // logo
             logoImageView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 120),
             logoImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             logoImageView.widthAnchor.constraint(equalToConstant: 100),
-            logoImageView.heightAnchor.constraint(equalToConstant: 100)
-        ])
+            logoImageView.heightAnchor.constraint(equalToConstant: 100),
 
-        // Контейнер с двумя полями
-        NSLayoutConstraint.activate([
+            // formContainer
             formContainerView.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 80),
             formContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             formContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            formContainerView.heightAnchor.constraint(equalToConstant: 100)
-        ])
+            formContainerView.heightAnchor.constraint(equalToConstant: 100),
 
-        // Email
-        NSLayoutConstraint.activate([
+            // email
             emailTextField.topAnchor.constraint(equalTo: formContainerView.topAnchor),
             emailTextField.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor, constant: 12),
             emailTextField.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor, constant: -12),
-            emailTextField.heightAnchor.constraint(equalTo: formContainerView.heightAnchor, multiplier: 0.5)
-        ])
+            emailTextField.heightAnchor.constraint(equalTo: formContainerView.heightAnchor, multiplier: 0.5),
 
-        // Разделитель
-        NSLayoutConstraint.activate([
+            // separator
             separatorView.topAnchor.constraint(equalTo: emailTextField.bottomAnchor),
             separatorView.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor),
             separatorView.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor),
-            separatorView.heightAnchor.constraint(equalToConstant: 0.5)
-        ])
+            separatorView.heightAnchor.constraint(equalToConstant: 0.5),
 
-        // Password
-        NSLayoutConstraint.activate([
+            // password
             passwordTextField.topAnchor.constraint(equalTo: separatorView.bottomAnchor),
             passwordTextField.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor, constant: 12),
             passwordTextField.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor, constant: -12),
-            passwordTextField.bottomAnchor.constraint(equalTo: formContainerView.bottomAnchor)
-        ])
+            passwordTextField.bottomAnchor.constraint(equalTo: formContainerView.bottomAnchor),
 
-        // Кнопка Log In
-        NSLayoutConstraint.activate([
+            // logInButton
             logInButton.topAnchor.constraint(equalTo: formContainerView.bottomAnchor, constant: 16),
             logInButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             logInButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             logInButton.heightAnchor.constraint(equalToConstant: 50),
-            logInButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20) // для контента scrollView
+            logInButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
     }
 
