@@ -2,37 +2,26 @@ import UIKit
 
 final class ProfileViewController: UIViewController {
 
+    // MARK: - UI
+
     private let tableView = UITableView(frame: .zero, style: .plain)
 
-    private let posts: [Post] = [
-        Post(author: "vedmak.official",
-             description: "Новые кадры со съёмок второго сезона сериала «Ведьмак».",
-             image: "post_1",
-             likes: 240,
-             views: 312),
-        Post(author: "netology.ru",
-             description: "Нетология. Меняем карьеру через образование.",
-             image: "post_2",
-             likes: 120,
-             views: 456),
-        Post(author: "swift.dev",
-             description: "От 'Hello, World' до первого сложного iOS-приложения — один курс.",
-             image: "post_3",
-             likes: 766,
-             views: 893),
-        Post(author: "cat.content",
-             description: "Котики, код и кофе — идеальное комбо.",
-             image: "post_4",
-             likes: 999,
-             views: 1500)
-    ]
+    // MARK: - Data
+
+    private let posts = PostStorage.posts
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         title = "Profile"
         view.backgroundColor = .systemBackground
+
         setupTableView()
     }
+
+    // MARK: - Setup
 
     private func setupTableView() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -48,13 +37,17 @@ final class ProfileViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
 
-        tableView.register(PostTableViewCell.self,
-                           forCellReuseIdentifier: PostTableViewCell.reuseIdentifier)
+        tableView.register(
+            PostTableViewCell.self,
+            forCellReuseIdentifier: PostTableViewCell.reuseIdentifier
+        )
 
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
     }
 }
+
+// MARK: - UITableViewDataSource
 
 extension ProfileViewController: UITableViewDataSource {
 
@@ -76,10 +69,13 @@ extension ProfileViewController: UITableViewDataSource {
             return UITableViewCell()
         }
 
-        cell.configure(with: posts[indexPath.row])
+        let post = posts[indexPath.row]
+        cell.configure(with: post)
         return cell
     }
 }
+
+// MARK: - UITableViewDelegate
 
 extension ProfileViewController: UITableViewDelegate {
 
