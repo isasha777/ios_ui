@@ -8,7 +8,7 @@ final class ProfileHeaderView: UIView {
         let iv = UIImageView()
         iv.image = UIImage(named: "avatar") ?? UIImage(systemName: "person.circle.fill")
         iv.contentMode = .scaleAspectFill
-        iv.layer.masksToBounds = true
+        iv.clipsToBounds = true                // 👈 вместо layer.masksToBounds
         iv.layer.borderWidth = 3
         iv.layer.borderColor = UIColor.white.cgColor
         iv.translatesAutoresizingMaskIntoConstraints = false
@@ -79,6 +79,7 @@ final class ProfileHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // ВАЖНО: делаем круг уже после того, как Auto Layout выставил frame
     override func layoutSubviews() {
         super.layoutSubviews()
         avatarImageView.layer.cornerRadius = avatarImageView.bounds.width / 2
@@ -98,7 +99,7 @@ final class ProfileHeaderView: UIView {
             avatarImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             avatarImageView.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             avatarImageView.widthAnchor.constraint(equalToConstant: 100),
-            avatarImageView.heightAnchor.constraint(equalToConstant: 100),
+            avatarImageView.heightAnchor.constraint(equalTo: avatarImageView.widthAnchor), // 👈 квадрат
 
             // name
             fullNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 27),
