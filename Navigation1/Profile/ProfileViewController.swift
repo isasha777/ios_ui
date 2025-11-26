@@ -6,6 +6,9 @@ final class ProfileViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
 
+    // Один экземпляр хедера (важно для systemLayoutSizeFitting)
+    private let profileHeaderView = ProfileHeaderView()
+
     // MARK: - Data
 
     private let posts = PostStorage.posts
@@ -44,6 +47,10 @@ final class ProfileViewController: UIViewController {
 
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
+
+        // На всякий случай можно подсказать таблице, что заголовок тоже динамический
+        tableView.sectionHeaderHeight = UITableView.automaticDimension
+        tableView.estimatedSectionHeaderHeight = 220
     }
 }
 
@@ -81,12 +88,31 @@ extension ProfileViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView,
                    viewForHeaderInSection section: Int) -> UIView? {
-        ProfileHeaderView()
+        // один и тот же headerView
+        return profileHeaderView
     }
 
     func tableView(_ tableView: UITableView,
                    heightForHeaderInSection section: Int) -> CGFloat {
-        220
+        // ВАЖНО: даём Auto Layout возможность посчитать высоту
+        // для заданной ширины таблицы
+
+        // Обновляем лейаут, чтобы констрейнты были актуальны
+        profileHeaderView.setNeedsLayout()
+        profileHeaderView.layoutIfNeeded()
+
+        let targetSize = CGSize(
+            width: tableView.bounds.width,
+            height: UIView.layoutFittingCompressedSize.height
+        )
+
+        let size = profileHeaderView.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+
+        return size.height
     }
 }
 
