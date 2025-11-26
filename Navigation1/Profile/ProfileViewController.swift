@@ -6,22 +6,35 @@ final class ProfileViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
 
-    // Один экземпляр хедера (важно для systemLayoutSizeFitting)
-    private let profileHeaderView = ProfileHeaderView()
-
     // MARK: - Data
 
     private let posts = PostStorage.posts
+
+    // список всех фото для галереи
+    private let photoNames: [String] = [
+        "post_1", "post_2", "photo_3", "photo_4",
+        "photo_5", "photo_6", "photo_7", "photo_8",
+        "photo_9", "photo_10", "photo_11", "photo_12"
+    ]
+
+    // один экземпляр шапки профиля
+    private let profileHeaderView = ProfileHeaderView()
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Profile"
         view.backgroundColor = .systemBackground
+        title = "Profile"   // заголовок не виден, т.к. navBar скрыт
 
         setupTableView()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // navBar скрыт на экране профиля
+        navigationController?.navigationBar.isHidden = true
     }
 
     // MARK: - Setup
@@ -41,6 +54,10 @@ final class ProfileViewController: UIViewController {
         tableView.dataSource = self
 
         tableView.register(
+            PhotosTableViewCell.self,
+            forCellReuseIdentifier: PhotosTableViewCell.reuseIdentifier
+        )
+        tableView.register(
             PostTableViewCell.self,
             forCellReuseIdentifier: PostTableViewCell.reuseIdentifier
         )
@@ -48,7 +65,6 @@ final class ProfileViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
 
-        // На всякий случай можно подсказать таблице, что заголовок тоже динамический
         tableView.sectionHeaderHeight = UITableView.automaticDimension
         tableView.estimatedSectionHeaderHeight = 220
     }
@@ -59,26 +75,50 @@ final class ProfileViewController: UIViewController {
 extension ProfileViewController: UITableViewDataSource {
 
     func numberOfSections(in tableView: UITableView) -> Int {
-        1
+        // 0 — header + photos, 1 — посты
+        2
     }
 
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
-        posts.count
+        switch section {
+        case 0:
+            return 1      // одна ячейка с фото
+        case 1:
+            return posts.count
+        default:
+            return 0
+        }
     }
 
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: PostTableViewCell.reuseIdentifier,
-            for: indexPath
-        ) as? PostTableViewCell else {
+
+        switch indexPath.section {
+        case 0:
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: PhotosTableViewCell.reuseIdentifier,
+                for: indexPath
+            ) as? PhotosTableViewCell else {
+                return UITableViewCell()
+            }
+            cell.configure(with: photoNames)
+            return cell
+
+        case 1:
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: PostTableViewCell.reuseIdentifier,
+                for: indexPath
+            ) as? PostTableViewCell else {
+                return UITableViewCell()
+            }
+            let post = posts[indexPath.row]
+            cell.configure(with: post)
+            return cell
+
+        default:
             return UITableViewCell()
         }
-
-        let post = posts[indexPath.row]
-        cell.configure(with: post)
-        return cell
     }
 }
 
@@ -86,33 +126,26 @@ extension ProfileViewController: UITableViewDataSource {
 
 extension ProfileViewController: UITableViewDelegate {
 
+    // Header только для секции 0 (профиль)
     func tableView(_ tableView: UITableView,
                    viewForHeaderInSection section: Int) -> UIView? {
-        // один и тот же headerView
-        return profileHeaderView
+        section == 0 ? profileHeaderView : nil
     }
 
     func tableView(_ tableView: UITableView,
                    heightForHeaderInSection section: Int) -> CGFloat {
-        // ВАЖНО: даём Auto Layout возможность посчитать высоту
-        // для заданной ширины таблицы
+        section == 0 ? 220 : 0
+    }
 
-        // Обновляем лейаут, чтобы констрейнты были актуальны
-        profileHeaderView.setNeedsLayout()
-        profileHeaderView.layoutIfNeeded()
+    func tableView(_ tableView: UITableView,
+                   didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
 
-        let targetSize = CGSize(
-            width: tableView.bounds.width,
-            height: UIView.layoutFittingCompressedSize.height
-        )
-
-        let size = profileHeaderView.systemLayoutSizeFitting(
-            targetSize,
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        )
-
-        return size.height
+        // переходим в фотогалерею только по ячейке Photos
+        if indexPath.section == 0 {
+            let vc = PhotosViewController(photoNames: photoNames)
+            navigationController?.pushViewController(vc, animated: true)
+        }
     }
 }
 
