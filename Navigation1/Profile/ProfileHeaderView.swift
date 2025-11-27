@@ -8,7 +8,7 @@ final class ProfileHeaderView: UIView {
         let iv = UIImageView()
         iv.image = UIImage(named: "avatar") ?? UIImage(systemName: "person.circle.fill")
         iv.contentMode = .scaleAspectFill
-        iv.clipsToBounds = true                // 👈 вместо layer.masksToBounds
+        iv.clipsToBounds = true
         iv.layer.borderWidth = 3
         iv.layer.borderColor = UIColor.white.cgColor
         iv.translatesAutoresizingMaskIntoConstraints = false
@@ -79,7 +79,6 @@ final class ProfileHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // ВАЖНО: делаем круг уже после того, как Auto Layout выставил frame
     override func layoutSubviews() {
         super.layoutSubviews()
         avatarImageView.layer.cornerRadius = avatarImageView.bounds.width / 2
@@ -99,7 +98,7 @@ final class ProfileHeaderView: UIView {
             avatarImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             avatarImageView.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             avatarImageView.widthAnchor.constraint(equalToConstant: 100),
-            avatarImageView.heightAnchor.constraint(equalTo: avatarImageView.widthAnchor), // 👈 квадрат
+            avatarImageView.heightAnchor.constraint(equalTo: avatarImageView.widthAnchor),
 
             // name
             fullNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 27),
@@ -124,6 +123,31 @@ final class ProfileHeaderView: UIView {
             setStatusButton.heightAnchor.constraint(equalToConstant: 50),
             setStatusButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
         ])
+    }
+
+    // MARK: - Public API для ProfileViewController
+
+    /// Вешаем обработчик тапа по аватару
+    func configureAvatarTap(target: Any, action: Selector) {
+        avatarImageView.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: target, action: action)
+        tap.numberOfTapsRequired = 1
+        avatarImageView.addGestureRecognizer(tap)
+    }
+
+    /// Кадр аватара в системе координат переданного view
+    func avatarFrame(in view: UIView) -> CGRect {
+        return avatarImageView.convert(avatarImageView.bounds, to: view)
+    }
+
+    /// Картинка аватара
+    var avatarImage: UIImage? {
+        avatarImageView.image
+    }
+
+    /// Скрыть/показать аватар (когда показываем увеличенную копию)
+    func setAvatarHidden(_ hidden: Bool) {
+        avatarImageView.isHidden = hidden
     }
 
     // MARK: - Actions

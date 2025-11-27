@@ -6,19 +6,48 @@ final class ProfileViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
 
+    private let profileHeaderView = ProfileHeaderView()
+
+    // Вспомогательные вью для анимации аватара
+    private let dimmedView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .black
+        view.alpha = 0
+        return view
+    }()
+
+    private let expandedAvatarImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.masksToBounds = true
+        return iv
+    }()
+
+    private let closeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "xmark"), for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        button.layer.cornerRadius = 16
+        button.alpha = 0
+        return button
+    }()
+
     // MARK: - Data
 
     private let posts = PostStorage.posts
 
-    // список всех фото для галереи
     private let photoNames: [String] = [
         "post_1", "post_2", "photo_3", "photo_4",
         "photo_5", "photo_6", "photo_7", "photo_8",
         "photo_9", "photo_10", "photo_11", "photo_12"
     ]
 
-    // один экземпляр шапки профиля
-    private let profileHeaderView = ProfileHeaderView()
+    // MARK: - Animation state
+
+    private var isAvatarExpanded = false
+    private var avatarOriginalFrame: CGRect = .zero
 
     // MARK: - Lifecycle
 
@@ -26,14 +55,16 @@ final class ProfileViewController: UIViewController {
         super.viewDidLoad()
 
         view.backgroundColor = .systemBackground
-        title = "Profile"   // заголовок не виден, т.к. navBar скрыт
+        title = "Profile"
 
         setupTableView()
+        setupAvatarTap()
+        setupCloseButtonAction()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // navBar скрыт на экране профиля
+        // На экране профиля навбар скрыт
         navigationController?.navigationBar.isHidden = true
     }
 
@@ -68,6 +99,95 @@ final class ProfileViewController: UIViewController {
         tableView.sectionHeaderHeight = UITableView.automaticDimension
         tableView.estimatedSectionHeaderHeight = 220
     }
+
+    private func setupAvatarTap() {
+        profileHeaderView.configureAvatarTap(target: self, action: #selector(avatarTapped))
+    }
+
+    private func setupCloseButtonAction() {
+        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+    }
+
+    // MARK: - Avatar animation
+
+    @objc private func avatarTapped() {
+        guard !isAvatarExpanded else { return }
+        guard let avatarImage = profileHeaderView.avatarImage else { return }
+
+        isAvatarExpanded = true
+
+        // исходный кадр аватара в системе координат view контроллера
+        avatarOriginalFrame = profileHeaderView.avatarFrame(in: view)
+
+        // Настраиваем вью
+        dimmedView.frame = view.bounds
+        dimmedView.alpha = 0
+
+        expandedAvatarImageView.image = avatarImage
+        expandedAvatarImageView.frame = avatarOriginalFrame
+        expandedAvatarImageView.layer.cornerRadius = avatarOriginalFrame.height / 2
+
+        let buttonSize: CGFloat = 32
+        let safeTop = view.safeAreaInsets.top
+        closeButton.frame = CGRect(
+            x: view.bounds.width - buttonSize - 16,
+            y: safeTop + 16,
+            width: buttonSize,
+            height: buttonSize
+        )
+        closeButton.alpha = 0
+
+        view.addSubview(dimmedView)
+        view.addSubview(expandedAvatarImageView)
+        view.addSubview(closeButton)
+
+        profileHeaderView.setAvatarHidden(true)
+
+        // Целевой кадр — аватар по ширине экрана, по центру
+        let targetWidth = view.bounds.width
+        let scale = targetWidth / avatarOriginalFrame.width
+        let targetHeight = avatarOriginalFrame.height * scale
+        let targetFrame = CGRect(
+            x: 0,
+            y: (view.bounds.height - targetHeight) / 2,
+            width: targetWidth,
+            height: targetHeight
+        )
+
+        // Анимация аватара + затемнение (0.5 сек)
+        UIView.animate(withDuration: 0.5, animations: {
+            self.dimmedView.alpha = 0.5
+            self.expandedAvatarImageView.frame = targetFrame
+            self.expandedAvatarImageView.layer.cornerRadius = 0 // ⭐️ cornerRadius → 0
+        }, completion: { _ in
+            // Анимация появления крестика (0.3 сек)
+            UIView.animate(withDuration: 0.3) {
+                self.closeButton.alpha = 1
+            }
+        })
+    }
+
+    @objc private func closeButtonTapped() {
+        guard isAvatarExpanded else { return }
+
+        // Сначала убираем крестик
+        UIView.animate(withDuration: 0.3, animations: {
+            self.closeButton.alpha = 0
+        }, completion: { _ in
+            // Потом возвращаем аватар и затемнение в исходное состояние
+            UIView.animate(withDuration: 0.5, animations: {
+                self.dimmedView.alpha = 0
+                self.expandedAvatarImageView.frame = self.avatarOriginalFrame
+                self.expandedAvatarImageView.layer.cornerRadius = self.avatarOriginalFrame.height / 2
+            }, completion: { _ in
+                self.dimmedView.removeFromSuperview()
+                self.expandedAvatarImageView.removeFromSuperview()
+                self.closeButton.removeFromSuperview()
+                self.profileHeaderView.setAvatarHidden(false)
+                self.isAvatarExpanded = false
+            })
+        })
+    }
 }
 
 // MARK: - UITableViewDataSource
@@ -83,7 +203,7 @@ extension ProfileViewController: UITableViewDataSource {
                    numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
-            return 1      // одна ячейка с фото
+            return 1
         case 1:
             return posts.count
         default:
@@ -93,7 +213,6 @@ extension ProfileViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
         switch indexPath.section {
         case 0:
             guard let cell = tableView.dequeueReusableCell(
@@ -126,7 +245,6 @@ extension ProfileViewController: UITableViewDataSource {
 
 extension ProfileViewController: UITableViewDelegate {
 
-    // Header только для секции 0 (профиль)
     func tableView(_ tableView: UITableView,
                    viewForHeaderInSection section: Int) -> UIView? {
         section == 0 ? profileHeaderView : nil
@@ -141,9 +259,10 @@ extension ProfileViewController: UITableViewDelegate {
                    didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        // переходим в фотогалерею только по ячейке Photos
+        // переход к фотогалерее по ячейке Photos
         if indexPath.section == 0 {
             let vc = PhotosViewController(photoNames: photoNames)
+            navigationController?.navigationBar.isHidden = false
             navigationController?.pushViewController(vc, animated: true)
         }
     }
