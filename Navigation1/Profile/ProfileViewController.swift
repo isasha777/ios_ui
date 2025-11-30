@@ -8,7 +8,6 @@ final class ProfileViewController: UIViewController {
 
     private let profileHeaderView = ProfileHeaderView()
 
-    // Вспомогательные вью для анимации аватара
     private let dimmedView: UIView = {
         let view = UIView()
         view.backgroundColor = .black
@@ -20,7 +19,6 @@ final class ProfileViewController: UIViewController {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.layer.masksToBounds = true
         return iv
     }()
 
@@ -39,7 +37,7 @@ final class ProfileViewController: UIViewController {
     private let posts = PostStorage.posts
 
     private let photoNames: [String] = [
-        "post_1", "post_2", "photo_3", "photo_4",
+        "photo_1", "photo_2", "photo_3", "photo_4",
         "photo_5", "photo_6", "photo_7", "photo_8",
         "photo_9", "photo_10", "photo_11", "photo_12"
     ]
@@ -58,13 +56,12 @@ final class ProfileViewController: UIViewController {
         title = "Profile"
 
         setupTableView()
-        setupAvatarTap()
-        setupCloseButtonAction()
+        profileHeaderView.configureAvatarTap(target: self, action: #selector(avatarTapped))
+        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // На экране профиля навбар скрыт
         navigationController?.navigationBar.isHidden = true
     }
 
@@ -100,14 +97,6 @@ final class ProfileViewController: UIViewController {
         tableView.estimatedSectionHeaderHeight = 220
     }
 
-    private func setupAvatarTap() {
-        profileHeaderView.configureAvatarTap(target: self, action: #selector(avatarTapped))
-    }
-
-    private func setupCloseButtonAction() {
-        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
-    }
-
     // MARK: - Avatar animation
 
     @objc private func avatarTapped() {
@@ -116,10 +105,8 @@ final class ProfileViewController: UIViewController {
 
         isAvatarExpanded = true
 
-        // исходный кадр аватара в системе координат view контроллера
         avatarOriginalFrame = profileHeaderView.avatarFrame(in: view)
 
-        // Настраиваем вью
         dimmedView.frame = view.bounds
         dimmedView.alpha = 0
 
@@ -143,7 +130,6 @@ final class ProfileViewController: UIViewController {
 
         profileHeaderView.setAvatarHidden(true)
 
-        // Целевой кадр — аватар по ширине экрана, по центру
         let targetWidth = view.bounds.width
         let scale = targetWidth / avatarOriginalFrame.width
         let targetHeight = avatarOriginalFrame.height * scale
@@ -154,13 +140,11 @@ final class ProfileViewController: UIViewController {
             height: targetHeight
         )
 
-        // Анимация аватара + затемнение (0.5 сек)
         UIView.animate(withDuration: 0.5, animations: {
             self.dimmedView.alpha = 0.5
             self.expandedAvatarImageView.frame = targetFrame
-            self.expandedAvatarImageView.layer.cornerRadius = 0 // ⭐️ cornerRadius → 0
+            self.expandedAvatarImageView.layer.cornerRadius = 0
         }, completion: { _ in
-            // Анимация появления крестика (0.3 сек)
             UIView.animate(withDuration: 0.3) {
                 self.closeButton.alpha = 1
             }
@@ -170,11 +154,9 @@ final class ProfileViewController: UIViewController {
     @objc private func closeButtonTapped() {
         guard isAvatarExpanded else { return }
 
-        // Сначала убираем крестик
         UIView.animate(withDuration: 0.3, animations: {
             self.closeButton.alpha = 0
         }, completion: { _ in
-            // Потом возвращаем аватар и затемнение в исходное состояние
             UIView.animate(withDuration: 0.5, animations: {
                 self.dimmedView.alpha = 0
                 self.expandedAvatarImageView.frame = self.avatarOriginalFrame
@@ -195,19 +177,15 @@ final class ProfileViewController: UIViewController {
 extension ProfileViewController: UITableViewDataSource {
 
     func numberOfSections(in tableView: UITableView) -> Int {
-        // 0 — header + photos, 1 — посты
         2
     }
 
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
         switch section {
-        case 0:
-            return 1
-        case 1:
-            return posts.count
-        default:
-            return 0
+        case 0: return 1
+        case 1: return posts.count
+        default: return 0
         }
     }
 
@@ -218,9 +196,7 @@ extension ProfileViewController: UITableViewDataSource {
             guard let cell = tableView.dequeueReusableCell(
                 withIdentifier: PhotosTableViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? PhotosTableViewCell else {
-                return UITableViewCell()
-            }
+            ) as? PhotosTableViewCell else { return UITableViewCell() }
             cell.configure(with: photoNames)
             return cell
 
@@ -228,9 +204,7 @@ extension ProfileViewController: UITableViewDataSource {
             guard let cell = tableView.dequeueReusableCell(
                 withIdentifier: PostTableViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? PostTableViewCell else {
-                return UITableViewCell()
-            }
+            ) as? PostTableViewCell else { return UITableViewCell() }
             let post = posts[indexPath.row]
             cell.configure(with: post)
             return cell
@@ -259,10 +233,8 @@ extension ProfileViewController: UITableViewDelegate {
                    didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        // переход к фотогалерее по ячейке Photos
         if indexPath.section == 0 {
             let vc = PhotosViewController(photoNames: photoNames)
-            navigationController?.navigationBar.isHidden = false
             navigationController?.pushViewController(vc, animated: true)
         }
     }

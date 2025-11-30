@@ -1,9 +1,3 @@
-//
-//  PhotosViewController.swift
-//  Navigation1
-//
-//  Created by Alex Nekrasow on 26.11.2025.
-//
 import UIKit
 
 final class PhotosViewController: UIViewController {
@@ -38,27 +32,12 @@ final class PhotosViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        title = "Photo Gallery"
         view.backgroundColor = .systemBackground
+        title = "Photo Gallery"
 
-        view.addSubview(collectionView)
-
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        collectionView.backgroundColor = .systemBackground
-        collectionView.dataSource = self
-        collectionView.delegate = self
-
-        collectionView.register(
-            PhotosCollectionViewCell.self,
-            forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseIdentifier
-        )
+        setupViews()
+        setupConstraints()
+        setupCollection()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -69,6 +48,32 @@ final class PhotosViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.navigationBar.isHidden = true
+    }
+
+    // MARK: - Setup
+
+    private func setupViews() {
+        view.addSubview(collectionView)
+    }
+
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func setupCollection() {
+        collectionView.backgroundColor = .systemBackground
+        collectionView.dataSource = self
+        collectionView.delegate = self
+
+        collectionView.register(
+            PhotosCollectionViewCell.self,
+            forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseIdentifier
+        )
     }
 }
 
@@ -89,9 +94,7 @@ extension PhotosViewController: UICollectionViewDataSource {
         ) as? PhotosCollectionViewCell else {
             return UICollectionViewCell()
         }
-
-        let imageName = photoNames[indexPath.item]
-        cell.configure(with: imageName)
+        cell.configure(with: photoNames[indexPath.item])
         return cell
     }
 }
@@ -100,7 +103,6 @@ extension PhotosViewController: UICollectionViewDataSource {
 
 extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
-    // Отступы секции (подгони под макет — здесь 12 по бокам, 12 сверху/снизу)
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         insetForSectionAt section: Int) -> UIEdgeInsets {
@@ -119,7 +121,6 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
         8
     }
 
-    // 3 равные ячейки в ряд
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -136,7 +137,7 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
         )
 
         let totalHorizontalInset = insets.left + insets.right
-        let totalSpacing = spacing * 2          // 3 колонки → 2 промежутка
+        let totalSpacing = spacing * 2
         let width = collectionView.bounds.width - totalHorizontalInset - totalSpacing
         let itemWidth = floor(width / 3)
 
