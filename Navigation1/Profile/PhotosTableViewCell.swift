@@ -1,17 +1,8 @@
-//
-//  PhotosTableViewCell.swift
-//  Navigation1
-//
-//  Created by Alex Nekrasow on 26.11.2025.
-//
-
 import UIKit
 
 final class PhotosTableViewCell: UITableViewCell {
 
     static let reuseIdentifier = "PhotosTableViewCell"
-
-    // MARK: - UI
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -33,8 +24,8 @@ final class PhotosTableViewCell: UITableViewCell {
     private let photosStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.alignment = .fill
         stack.distribution = .fillEqually
+        stack.alignment = .fill
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
@@ -46,6 +37,7 @@ final class PhotosTableViewCell: UITableViewCell {
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        selectionStyle = .default
         setupViews()
         setupConstraints()
     }
@@ -57,22 +49,18 @@ final class PhotosTableViewCell: UITableViewCell {
     // MARK: - Setup
 
     private func setupViews() {
-        selectionStyle = .default
-        contentView.backgroundColor = .white
-
         contentView.addSubview(titleLabel)
         contentView.addSubview(arrowImageView)
         contentView.addSubview(photosStackView)
 
-        // создаём 4 imageView для превью
         for _ in 0..<4 {
-            let imageView = UIImageView()
-            imageView.contentMode = .scaleAspectFill
-            imageView.clipsToBounds = true
-            imageView.layer.cornerRadius = 6
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            photosStackView.addArrangedSubview(imageView)
-            photoImageViews.append(imageView)
+            let iv = UIImageView()
+            iv.contentMode = .scaleAspectFill
+            iv.clipsToBounds = true
+            iv.layer.cornerRadius = 6
+            iv.translatesAutoresizingMaskIntoConstraints = false
+            photosStackView.addArrangedSubview(iv)
+            photoImageViews.append(iv)
         }
     }
 
@@ -80,18 +68,15 @@ final class PhotosTableViewCell: UITableViewCell {
         let inset: CGFloat = 12
 
         NSLayoutConstraint.activate([
-            // Заголовок
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: inset),
             titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: inset),
 
-            // Стрелка
             arrowImageView.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             arrowImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -inset),
             arrowImageView.widthAnchor.constraint(equalToConstant: 16),
             arrowImageView.heightAnchor.constraint(equalToConstant: 16),
             arrowImageView.leadingAnchor.constraint(greaterThanOrEqualTo: titleLabel.trailingAnchor, constant: 8),
 
-            // Стек с фото
             photosStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             photosStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: inset),
             photosStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -inset),
@@ -102,7 +87,6 @@ final class PhotosTableViewCell: UITableViewCell {
 
     // MARK: - Configure
 
-    /// Передаём массив имён изображений; в ячейке показываются только первые 4
     func configure(with imageNames: [String]) {
         for (index, imageView) in photoImageViews.enumerated() {
             if index < imageNames.count {
@@ -113,3 +97,4 @@ final class PhotosTableViewCell: UITableViewCell {
         }
     }
 }
+

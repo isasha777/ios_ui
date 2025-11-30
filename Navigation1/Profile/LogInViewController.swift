@@ -14,7 +14,6 @@ final class LogInViewController: UIViewController {
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.alwaysBounceVertical = true
         return sv
     }()
 
@@ -26,7 +25,8 @@ final class LogInViewController: UIViewController {
 
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(named: "Logo") // Logo.png в ассетах
+        // ВАЖНО: имя должно совпадать с imageset в Assets.xcassets
+        iv.image = UIImage(named: "Logo")
         iv.contentMode = .scaleAspectFit
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -36,9 +36,8 @@ final class LogInViewController: UIViewController {
         let v = UIView()
         v.backgroundColor = .systemGray6
         v.layer.cornerRadius = 10
-        v.layer.masksToBounds = true
         v.layer.borderWidth = 0.5
-        v.layer.borderColor = UIColor.systemGray4.cgColor
+        v.layer.borderColor = UIColor.lightGray.cgColor
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
@@ -47,19 +46,6 @@ final class LogInViewController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "Email or phone"
         tf.font = .systemFont(ofSize: 16)
-        tf.borderStyle = .none
-        tf.autocapitalizationType = .none
-        tf.keyboardType = .emailAddress
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        return tf
-    }()
-
-    private let passwordTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "Password"
-        tf.font = .systemFont(ofSize: 16)
-        tf.borderStyle = .none
-        tf.isSecureTextEntry = true                     // 🔒 скрываем ввод
         tf.autocapitalizationType = .none
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
@@ -67,32 +53,35 @@ final class LogInViewController: UIViewController {
 
     private let separatorView: UIView = {
         let v = UIView()
-        v.backgroundColor = .systemGray4
+        v.backgroundColor = .lightGray
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
 
-    private lazy var logInButton: UIButton = {
+    private let passwordTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Password"
+        tf.font = .systemFont(ofSize: 16)
+        tf.isSecureTextEntry = true
+        tf.autocapitalizationType = .none
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        return tf
+    }()
+
+    private let logInButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle("Log In", for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-
-        // фон по макету: синий пиксель
-        if let bg = UIImage(named: "blue_pixel") {
-            b.setBackgroundImage(bg.resizableImage(withCapInsets: .zero, resizingMode: .stretch),
+        // картинка blue_pixel в ассетах (1×1), тянем как фон
+        if let image = UIImage(named: "blue_pixel") {
+            b.setBackgroundImage(image.resizableImage(withCapInsets: .zero, resizingMode: .stretch),
                                  for: .normal)
-        } else if let color = UIColor(named: "VKBlue") {
-            b.backgroundColor = color
         } else {
-            b.backgroundColor = .systemBlue
+            b.backgroundColor = UIColor(red: 0.28, green: 0.52, blue: 0.80, alpha: 1)
         }
-
         b.layer.cornerRadius = 10
         b.layer.masksToBounds = true
-
         b.translatesAutoresizingMaskIntoConstraints = false
-        b.addTarget(self, action: #selector(handleLoginTap), for: .touchUpInside)
         return b
     }()
 
@@ -100,47 +89,29 @@ final class LogInViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         view.backgroundColor = .white
-        title = "Profile"
+        navigationController?.navigationBar.isHidden = true
 
-        setupNavigationBar()
-        setupHierarchy()
+        setupViews()
         setupConstraints()
-        setupGesture()
-        setupKeyboardObservers()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+        setupActions()
+        setupKeyboardNotifications()
     }
 
     // MARK: - Setup
 
-    private func setupNavigationBar() {
-        // Скрываем навбар ТОЛЬКО на этом экране
-        navigationController?.navigationBar.isHidden = true
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.navigationBar.isHidden = true
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.navigationBar.isHidden = false
-    }
-
-    private func setupHierarchy() {
+    private func setupViews() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
 
         contentView.addSubview(logoImageView)
         contentView.addSubview(formContainerView)
+        contentView.addSubview(logInButton)
+
         formContainerView.addSubview(emailTextField)
         formContainerView.addSubview(separatorView)
         formContainerView.addSubview(passwordTextField)
-        contentView.addSubview(logInButton)
     }
 
     private func setupConstraints() {
@@ -164,25 +135,22 @@ final class LogInViewController: UIViewController {
             logoImageView.widthAnchor.constraint(equalToConstant: 100),
             logoImageView.heightAnchor.constraint(equalToConstant: 100),
 
-            // formContainer
+            // form container
             formContainerView.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 80),
             formContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             formContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             formContainerView.heightAnchor.constraint(equalToConstant: 100),
 
-            // email
             emailTextField.topAnchor.constraint(equalTo: formContainerView.topAnchor),
             emailTextField.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor, constant: 12),
             emailTextField.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor, constant: -12),
             emailTextField.heightAnchor.constraint(equalTo: formContainerView.heightAnchor, multiplier: 0.5),
 
-            // separator
             separatorView.topAnchor.constraint(equalTo: emailTextField.bottomAnchor),
             separatorView.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor),
             separatorView.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor),
             separatorView.heightAnchor.constraint(equalToConstant: 0.5),
 
-            // password
             passwordTextField.topAnchor.constraint(equalTo: separatorView.bottomAnchor),
             passwordTextField.leadingAnchor.constraint(equalTo: formContainerView.leadingAnchor, constant: 12),
             passwordTextField.trailingAnchor.constraint(equalTo: formContainerView.trailingAnchor, constant: -12),
@@ -197,22 +165,17 @@ final class LogInViewController: UIViewController {
         ])
     }
 
-    private func setupGesture() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTapToDismissKeyboard))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
+    private func setupActions() {
+        logInButton.addTarget(self, action: #selector(logInButtonPressed), for: .touchUpInside)
     }
 
-    // MARK: - Keyboard
-
-    private func setupKeyboardObservers() {
+    private func setupKeyboardNotifications() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillShow(_:)),
             name: UIResponder.keyboardWillShowNotification,
             object: nil
         )
-
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillHide(_:)),
@@ -221,31 +184,26 @@ final class LogInViewController: UIViewController {
         )
     }
 
+    // MARK: - Actions
+
+    @objc private func logInButtonPressed() {
+        // без проверки данных — сразу в профиль
+        let profileVC = ProfileViewController()
+        navigationController?.pushViewController(profileVC, animated: true)
+    }
+
     @objc private func keyboardWillShow(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let frame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+            let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
         else { return }
 
-        let keyboardHeight = frame.height - view.safeAreaInsets.bottom
-        scrollView.contentInset.bottom = keyboardHeight
-        scrollView.verticalScrollIndicatorInsets.bottom = keyboardHeight
+        scrollView.contentInset.bottom = keyboardFrame.height + 20
+        scrollView.verticalScrollIndicatorInsets.bottom = keyboardFrame.height + 20
     }
 
     @objc private func keyboardWillHide(_ notification: Notification) {
-        scrollView.contentInset.bottom = 0
-        scrollView.verticalScrollIndicatorInsets.bottom = 0
-    }
-
-    // MARK: - Actions
-
-    @objc private func handleTapToDismissKeyboard() {
-        view.endEditing(true)
-    }
-
-    @objc private func handleLoginTap() {
-        // По заданию: независимо от данных — переходим на экран профиля
-        let profileVC = ProfileViewController()
-        navigationController?.pushViewController(profileVC, animated: true)
+        scrollView.contentInset.bottom = .zero
+        scrollView.verticalScrollIndicatorInsets.bottom = .zero
     }
 }
