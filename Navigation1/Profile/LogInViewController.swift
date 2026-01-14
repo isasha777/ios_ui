@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import StorageService
+
 
 final class LogInViewController: UIViewController {
 

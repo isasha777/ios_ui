@@ -1,4 +1,5 @@
 import UIKit
+import StorageService
 
 final class ProfileViewController: UIViewController {
 
@@ -51,6 +52,11 @@ final class ProfileViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+    #if DEBUG
+    view.backgroundColor = .systemOrange   // Debug
+    #else
+    view.backgroundColor = .systemGreen    // Release
+    #endif
 
         view.backgroundColor = .systemBackground
         title = "Profile"

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import StorageService
 
 struct PostStorage {
     static let posts: [Post] = [
