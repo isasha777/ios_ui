@@ -1,4 +1,5 @@
 import UIKit
+import StorageService
 
 final class FeedViewController: UIViewController {
 
