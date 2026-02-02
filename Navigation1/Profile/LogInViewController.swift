@@ -5,8 +5,17 @@ final class LogInViewController: UIViewController {
     // MARK: - Dependencies
 
     private let userService: UserService
+    var loginDelegate: LoginViewControllerDelegate?
 
     // MARK: - UI
+
+    private let logoImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(named: "Logo") // <-- проверь имя ассета
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
 
     private let loginTextField: UITextField = {
         let tf = UITextField()
@@ -64,6 +73,7 @@ final class LogInViewController: UIViewController {
     // MARK: - Setup
 
     private func setupViews() {
+        view.addSubview(logoImageView)
         view.addSubview(loginTextField)
         view.addSubview(passwordTextField)
         view.addSubview(logInButton)
@@ -71,16 +81,25 @@ final class LogInViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            loginTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 120),
+            // Logo
+            logoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 100),
+            logoImageView.heightAnchor.constraint(equalToConstant: 100),
+
+            // Login
+            loginTextField.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 80),
             loginTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             loginTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             loginTextField.heightAnchor.constraint(equalToConstant: 44),
 
+            // Password
             passwordTextField.topAnchor.constraint(equalTo: loginTextField.bottomAnchor, constant: 12),
             passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             passwordTextField.heightAnchor.constraint(equalToConstant: 44),
 
+            // Button
             logInButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 16),
             logInButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             logInButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
@@ -91,11 +110,22 @@ final class LogInViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func logInTapped() {
-        let login = (loginTextField.text ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let login = (loginTextField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = passwordTextField.text ?? ""
+
+        guard let loginDelegate else {
+            showAlert(title: "Ошибка", message: "Не настроен сервис проверки логина.")
+            return
+        }
+
+        let isValid = loginDelegate.check(login: login, password: password)
+        guard isValid else {
+            showAlert(title: "Ошибка", message: "Неверный логин или пароль")
+            return
+        }
 
         guard let user = userService.getUser(login: login) else {
-            showInvalidAlert()
+            showAlert(title: "Ошибка", message: "Пользователь не найден")
             return
         }
 
@@ -104,12 +134,8 @@ final class LogInViewController: UIViewController {
         navigationController?.pushViewController(profileVC, animated: true)
     }
 
-    private func showInvalidAlert() {
-        let alert = UIAlertController(
-            title: "Ошибка",
-            message: "Некорректный логин",
-            preferredStyle: .alert
-        )
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Ок", style: .default))
         present(alert, animated: true)
     }

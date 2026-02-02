@@ -20,8 +20,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Debug user
         let debugUser = User(
-            login: "test",
-            fullName: "Debug User",
+            login: "cat",
+            fullName: "Debug Cat",
             avatar: UIImage(systemName: "person.circle.fill") ?? UIImage(),
             status: "I am Debug!"
         )
@@ -33,22 +33,28 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         userService = CurrentUserService(user: prodUser)
         #endif
 
-        // Feed
+        // ✅ Фабрика делает инспектор
+        let factory: LoginFactory = MyLoginFactory()
+        let inspector = factory.makeLoginInspector()
+
+        // Profile -> Login
+        let loginVC = LogInViewController(userService: userService)
+        loginVC.loginDelegate = inspector
+
+        let profileNav = UINavigationController(rootViewController: loginVC)
+        profileNav.tabBarItem = UITabBarItem(
+            title: "Профиль",
+            image: UIImage(systemName: "person"),
+            selectedImage: UIImage(systemName: "person.fill")
+        )
+
+        // Feed (если есть)
         let feedVC = FeedViewController()
         let feedNav = UINavigationController(rootViewController: feedVC)
         feedNav.tabBarItem = UITabBarItem(
             title: "Лента",
             image: UIImage(systemName: "house"),
             selectedImage: UIImage(systemName: "house.fill")
-        )
-
-        // Profile -> Login
-        let loginVC = LogInViewController(userService: userService) // ✅ ВОТ ЭТО РЕШАЕТ ОШИБКУ
-        let profileNav = UINavigationController(rootViewController: loginVC)
-        profileNav.tabBarItem = UITabBarItem(
-            title: "Профиль",
-            image: UIImage(systemName: "person"),
-            selectedImage: UIImage(systemName: "person.fill")
         )
 
         let tabBar = UITabBarController()
