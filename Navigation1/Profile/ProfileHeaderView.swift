@@ -2,23 +2,20 @@ import UIKit
 
 final class ProfileHeaderView: UIView {
 
-    private var statusText: String = ""
-
     // MARK: - UI
 
     private let avatarImageView: UIImageView = {
         let iv = UIImageView()
-        // ТОЛЬКО системная иконка — круг гарантирован
-        iv.image = UIImage(systemName: "person.circle.fill")
-        iv.tintColor = .systemBlue
-        iv.contentMode = .scaleAspectFit      // важный момент
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.borderWidth = 3
+        iv.layer.borderColor = UIColor.white.cgColor
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
 
     private let fullNameLabel: UILabel = {
         let l = UILabel()
-        l.text = "Hipster Cat"
         l.font = .systemFont(ofSize: 18, weight: .bold)
         l.textColor = .black
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -27,7 +24,6 @@ final class ProfileHeaderView: UIView {
 
     private let statusLabel: UILabel = {
         let l = UILabel()
-        l.text = "Waiting for something..."
         l.font = .systemFont(ofSize: 14)
         l.textColor = .gray
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -52,20 +48,24 @@ final class ProfileHeaderView: UIView {
     }()
 
     private lazy var setStatusButton: UIButton = {
-        let b = UIButton(type: .system)
-        b.setTitle("Set status", for: .normal)
-        b.setTitleColor(.white, for: .normal)
-        b.backgroundColor = .systemBlue
-        b.layer.cornerRadius = 10
-        b.layer.masksToBounds = false
-        b.layer.shadowColor = UIColor.black.cgColor
-        b.layer.shadowOpacity = 0.7
-        b.layer.shadowOffset = CGSize(width: 4, height: 4)
-        b.layer.shadowRadius = 4
-        b.translatesAutoresizingMaskIntoConstraints = false
-        b.addTarget(self, action: #selector(didTapSetStatus), for: .touchUpInside)
-        return b
+        let button = UIButton(type: .system)
+        button.setTitle("Set status", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .systemBlue
+        button.layer.cornerRadius = 10
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.25
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 6
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTapSetStatus), for: .touchUpInside)
+        return button
     }()
+
+    // MARK: - State
+
+    private var statusText: String = ""
+    private var user: User?
 
     // MARK: - Init
 
@@ -80,26 +80,18 @@ final class ProfileHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // НИЧЕГО не делаем с cornerRadius — круг даёт сама иконка
-
-    // MARK: - Public API
-
-    func configureAvatarTap(target: Any, action: Selector) {
-        avatarImageView.isUserInteractionEnabled = true
-        let tap = UITapGestureRecognizer(target: target, action: action)
-        avatarImageView.addGestureRecognizer(tap)
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        avatarImageView.layer.cornerRadius = avatarImageView.bounds.width / 2
     }
 
-    func avatarFrame(in view: UIView) -> CGRect {
-        avatarImageView.convert(avatarImageView.bounds, to: view)
-    }
+    // MARK: - Public
 
-    var avatarImage: UIImage? {
-        avatarImageView.image
-    }
-
-    func setAvatarHidden(_ hidden: Bool) {
-        avatarImageView.isHidden = hidden
+    func configure(with user: User) {
+        self.user = user
+        fullNameLabel.text = user.fullName
+        statusLabel.text = user.status
+        avatarImageView.image = user.avatar
     }
 
     // MARK: - Setup
@@ -117,7 +109,7 @@ final class ProfileHeaderView: UIView {
             avatarImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             avatarImageView.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             avatarImageView.widthAnchor.constraint(equalToConstant: 100),
-            avatarImageView.heightAnchor.constraint(equalToConstant: 100),
+            avatarImageView.heightAnchor.constraint(equalTo: avatarImageView.widthAnchor),
 
             fullNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 27),
             fullNameLabel.topAnchor.constraint(equalTo: avatarImageView.topAnchor, constant: 16),
@@ -147,10 +139,14 @@ final class ProfileHeaderView: UIView {
     }
 
     @objc private func didTapSetStatus() {
+        guard let user else { return }
+
         if !statusText.isEmpty {
+            user.status = statusText
             statusLabel.text = statusText
         }
-        print("Статус: \(statusLabel.text ?? "")")
+
+        print("Статус: \(user.status)")
         endEditing(true)
     }
 }
