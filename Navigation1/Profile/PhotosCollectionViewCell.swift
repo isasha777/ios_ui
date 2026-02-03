@@ -2,13 +2,12 @@ import UIKit
 
 final class PhotosCollectionViewCell: UICollectionViewCell {
 
-    static let reuseIdentifier = "PhotosCollectionViewCell"
+    static let reuseId = "PhotosCollectionViewCell"
 
     private let imageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.layer.cornerRadius = 6
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
@@ -21,6 +20,11 @@ final class PhotosCollectionViewCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.image = nil
     }
 
     private func setupViews() {
@@ -36,8 +40,8 @@ final class PhotosCollectionViewCell: UICollectionViewCell {
         ])
     }
 
-    func configure(with imageName: String) {
-        imageView.image = UIImage(named: imageName)
+    func configure(with image: UIImage) {
+        imageView.image = image
     }
 }
 
