@@ -549,7 +549,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/TrueMax/iOSIntPackage";
 			requirement = {
-				branch = "branch == imagepublisher";
+				branch = imagepublisher;
 				kind = branch;
 			};
 		};
