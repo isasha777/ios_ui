@@ -11,6 +11,8 @@ final class ProfileViewController: UIViewController {
             }
         }
     }
+    
+    weak var coordinator: ProfileCoordinator?
 
     // MARK: - UI
 

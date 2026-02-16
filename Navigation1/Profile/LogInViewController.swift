@@ -6,6 +6,7 @@ final class LogInViewController: UIViewController {
 
     private let userService: UserService
     var loginDelegate: LoginViewControllerDelegate?
+    weak var coordinator: ProfileCoordinator?
 
     // MARK: - UI
 
@@ -131,7 +132,7 @@ final class LogInViewController: UIViewController {
 
         let profileVC = ProfileViewController()
         profileVC.user = user
-        navigationController?.pushViewController(profileVC, animated: true)
+        coordinator?.showProfile(user: user)
     }
 
     private func showAlert(title: String, message: String) {

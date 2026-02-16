@@ -3,6 +3,8 @@ import UIKit
 final class FeedViewController: UIViewController {
 
     private let viewModel: FeedViewModel
+    
+    weak var coordinator: FeedCoordinator?
 
     // MARK: - UI
 
