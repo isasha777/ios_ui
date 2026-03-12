@@ -5,8 +5,11 @@ final class PhotosViewController: UIViewController {
 
     // MARK: - Data
 
-    private var images: [UIImage] = []
-    private let publisherFacade = ImagePublisherFacade()
+    /// Исходные фото без обработки
+    private var sourceImages: [UIImage] = []
+
+    /// То, что показываем в коллекции
+    private var displayedImages: [UIImage] = []
 
     // MARK: - UI
 
@@ -20,8 +23,10 @@ final class PhotosViewController: UIViewController {
         cv.backgroundColor = .systemBackground
         cv.dataSource = self
         cv.delegate = self
-        cv.register(PhotosCollectionViewCell.self,
-                    forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseId)
+        cv.register(
+            PhotosCollectionViewCell.self,
+            forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseId
+        )
         return cv
     }()
 
@@ -29,59 +34,32 @@ final class PhotosViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         title = "Photo Gallery"
         view.backgroundColor = .systemBackground
 
         setupViews()
         setupConstraints()
+        loadSourceImages()
 
-        // ✅ 1) ПОДПИСКА (обязательно подобрать точное имя метода через autocomplete)
-        // Напечатай: publisherFacade. и посмотри доступные методы (subscribe/addSubscriber/…)
-        // Пример (замени на свой):
-        // publisherFacade.subscribe(self)
-        subscribeToPublisher()
+        // Сначала показываем исходные фото
+        displayedImages = sourceImages
+        collectionView.reloadData()
 
-        // ✅ 2) СТАРТ заполнения (у тебя точно требует repeat:)
-        publisherFacade.addImagesWithTimer(time: 0.5, repeat: 20)
+        // Дальше можно поочерёдно вызывать разные варианты обработки.
+        // Для отладки обычно оставляют один активный вызов, остальные — закомментированы.
+
+        runProcessingExample()
     }
 
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        // ✅ 3) ОТПИСКА (точное имя метода тоже через autocomplete)
-        unsubscribeFromPublisher()
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.navigationBar.isHidden = false
     }
 
-    deinit {
-        unsubscribeFromPublisher()
-    }
-
-    // MARK: - Subscribe / Unsubscribe (вынесено в методы, как любят проверяющие)
-
-    private func subscribeToPublisher() {
-        // Вставь сюда 1 строку с правильным методом подписки:
-        // publisherFacade.<#subscribeMethod#>(self)
-
-        // ВАЖНО: чтобы Xcode подсказал:
-        // набери "publisherFacade." и посмотри список.
-        publisherFacade.subscribe(self)
-    }
-
-    private func unsubscribeFromPublisher() {
-        // Вставь сюда 1 строку с правильным методом отписки:
-        //publisherFacade.<#unsubscribeMethod#>(self)
-
-        // Если у тебя нет unsubscribe/removeSubscriber/removeSubscription —
-        // значит метод называется иначе. Его точно видно в autocomplete.
-        // Пока оставь так — и замени на правильный.
-        //publisherFacade.unsubscribe(self)
-    }
-
-    // MARK: - Helpers
-
-    private func appendImage(_ image: UIImage) {
-        images.append(image)
-        let indexPath = IndexPath(item: images.count - 1, section: 0)
-        collectionView.insertItems(at: [indexPath])
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.navigationBar.isHidden = true
     }
 
     // MARK: - Setup
@@ -98,41 +76,103 @@ final class PhotosViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-}
 
-// MARK: - ImageLibrarySubscriber
-extension PhotosViewController: ImageLibrarySubscriber {
-    func receive(images: [UIImage]) {
-        
+    // MARK: - Images
+
+    private func loadSourceImages() {
+        // Верни обычное заполнение фото, как было до Observer.
+        // Подставь свои реальные имена ассетов.
+        let names = [
+            "photo_1", "photo_2", "photo_3",
+            "photo_4", "photo_5", "photo_6",
+            "photo_7", "photo_8", "photo_9",
+            "photo_10", "photo_11", "photo_12"
+        ]
+
+        sourceImages = names.compactMap { UIImage(named: $0) }
     }
-    
 
-    // ❗ ВАЖНО:
-    // Сейчас ты получишь ТОЧНУЮ сигнатуру метода через Xcode.
-    // Сделай так:
-    // 1) Нажми на ошибку "does not conform"
-    // 2) Fix-it -> Add stubs
-    // 3) Xcode вставит сюда правильный метод
-    // 4) Внутри метода вызови appendImage(image)
+    // MARK: - Processing
 
-    // Пример (не факт что у тебя такой!):
-    // func receive(_ image: UIImage) { ... }
+    private func runProcessingExample() {
+        guard !sourceImages.isEmpty else { return }
 
-    // ВРЕМЕННО я оставлю один самый частый вариант.
-    // Если у тебя другой — Xcode сам заменит при Add stubs.
-    func receive(_ image: UIImage) {
-        DispatchQueue.main.async { [weak self] in
-            self?.appendImage(image)
+        // Пример №1
+        processImages(
+            images: sourceImages,
+            qos: .userInitiated
+            // filter: <выбери фильтр через автокомплит Xcode>
+        )
+
+        /*
+        // Пример №2
+        processImages(
+            images: sourceImages,
+            qos: .utility
+            // filter: <другой фильтр>
+        )
+
+        // Пример №3
+        processImages(
+            images: Array(sourceImages.prefix(6)),
+            qos: .background
+            // filter: <ещё один фильтр>
+        )
+        */
+    }
+
+    private func processImages(
+        images: [UIImage],
+        qos: QualityOfService
+        // filter: ImageProcessor.Filter
+    ) {
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        /*
+         ВАЖНО:
+         У разных версий пакета сигнатура может немного отличаться.
+         По заданию у тебя должен быть метод `processImagesOnThread`.
+
+         После того как напишешь `ImageProcessor.` и выберешь автокомплит,
+         подставь сюда точную сигнатуру из Xcode.
+
+         Чаще всего это выглядит примерно так:
+        */
+
+        ImageProcessor().processImagesOnThread(
+            sourceImages: images,
+            qos: qos
+            // filter: filter
+        ) { [weak self] processedImages in
+            guard let self else { return }
+
+            let endTime = CFAbsoluteTimeGetCurrent()
+            let elapsed = endTime - startTime
+
+            print("qos: \(qos), images: \(images.count), time: \(elapsed) sec")
+
+            DispatchQueue.main.async {
+                self.displayedImages = processedImages
+                self.collectionView.reloadData()
+            }
         }
+
+        /*
+         Пример комментариев для ДЗ после замеров:
+         // userInitiated, 12 images, filter X — 0.84 sec
+         // utility, 12 images, filter X — 1.31 sec
+         // background, 6 images, filter Y — 0.92 sec
+        */
     }
 }
 
 // MARK: - UICollectionViewDataSource
+
 extension PhotosViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        images.count
+        displayedImages.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
@@ -145,12 +185,13 @@ extension PhotosViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
 
-        cell.configure(with: images[indexPath.item])
+        cell.configure(with: displayedImages[indexPath.item])
         return cell
     }
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
+
 extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView,
@@ -163,4 +204,3 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: side, height: side)
     }
 }
-
