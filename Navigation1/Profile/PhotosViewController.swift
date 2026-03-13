@@ -5,10 +5,7 @@ final class PhotosViewController: UIViewController {
 
     // MARK: - Data
 
-    /// Исходные фото без обработки
     private var sourceImages: [UIImage] = []
-
-    /// То, что показываем в коллекции
     private var displayedImages: [UIImage] = []
 
     // MARK: - UI
@@ -42,13 +39,11 @@ final class PhotosViewController: UIViewController {
         setupConstraints()
         loadSourceImages()
 
-        // Сначала показываем исходные фото
+        // Сначала показываем обычные фото без обработки
         displayedImages = sourceImages
         collectionView.reloadData()
 
-        // Дальше можно поочерёдно вызывать разные варианты обработки.
-        // Для отладки обычно оставляют один активный вызов, остальные — закомментированы.
-
+        // Один активный пример обработки
         runProcessingExample()
     }
 
@@ -80,8 +75,6 @@ final class PhotosViewController: UIViewController {
     // MARK: - Images
 
     private func loadSourceImages() {
-        // Верни обычное заполнение фото, как было до Observer.
-        // Подставь свои реальные имена ассетов.
         let names = [
             "photo_1", "photo_2", "photo_3",
             "photo_4", "photo_5", "photo_6",
@@ -97,71 +90,62 @@ final class PhotosViewController: UIViewController {
     private func runProcessingExample() {
         guard !sourceImages.isEmpty else { return }
 
-        // Пример №1
         processImages(
             images: sourceImages,
-            qos: .userInitiated
-            // filter: <выбери фильтр через автокомплит Xcode>
+            qos: QualityOfService.userInitiated,
+            filter: ColorFilter.noir
         )
 
         /*
-        // Пример №2
         processImages(
             images: sourceImages,
-            qos: .utility
-            // filter: <другой фильтр>
+            qos: QualityOfService.utility,
+            filter: ColorFilter.chrome
         )
 
-        // Пример №3
         processImages(
             images: Array(sourceImages.prefix(6)),
-            qos: .background
-            // filter: <ещё один фильтр>
+            qos: QualityOfService.background,
+            filter: ColorFilter.fade
         )
         */
     }
 
     private func processImages(
         images: [UIImage],
-        qos: QualityOfService
-        // filter: ImageProcessor.Filter
+        qos: QualityOfService,
+        filter: ColorFilter
     ) {
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        /*
-         ВАЖНО:
-         У разных версий пакета сигнатура может немного отличаться.
-         По заданию у тебя должен быть метод `processImagesOnThread`.
-
-         После того как напишешь `ImageProcessor.` и выберешь автокомплит,
-         подставь сюда точную сигнатуру из Xcode.
-
-         Чаще всего это выглядит примерно так:
-        */
-
         ImageProcessor().processImagesOnThread(
             sourceImages: images,
+            filter: filter,
             qos: qos
-            // filter: filter
         ) { [weak self] processedImages in
             guard let self else { return }
 
             let endTime = CFAbsoluteTimeGetCurrent()
             let elapsed = endTime - startTime
 
-            print("qos: \(qos), images: \(images.count), time: \(elapsed) sec")
+            print("qos: \(qos), images: \(images.count), filter: \(filter), time: \(elapsed) sec")
+
+            let uiImages = processedImages.compactMap { cgImage -> UIImage? in
+                guard let cgImage else { return nil }
+                return UIImage(cgImage: cgImage)
+            }
 
             DispatchQueue.main.async {
-                self.displayedImages = processedImages
+                self.displayedImages = uiImages
                 self.collectionView.reloadData()
             }
         }
 
         /*
-         Пример комментариев для ДЗ после замеров:
-         // userInitiated, 12 images, filter X — 0.84 sec
-         // utility, 12 images, filter X — 1.31 sec
-         // background, 6 images, filter Y — 0.92 sec
+         Примеры комментариев для ДЗ после замеров:
+         // userInitiated, 12 images, filter noir — 0.84 sec
+         // utility, 12 images, filter chrome — 1.31 sec
+         // background, 6 images, filter fade — 0.92 sec
         */
     }
 }
