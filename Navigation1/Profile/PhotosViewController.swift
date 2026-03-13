@@ -1,43 +1,50 @@
 import UIKit
+import iOSIntPackage
 
 final class PhotosViewController: UIViewController {
 
     // MARK: - Data
 
-    private let photoNames: [String]
+    private var sourceImages: [UIImage] = []
+    private var displayedImages: [UIImage] = []
 
     // MARK: - UI
 
-    private let collectionView: UICollectionView
-
-    // MARK: - Init
-
-    init(photoNames: [String]) {
-        self.photoNames = photoNames
-
+    private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 8
+        layout.minimumInteritemSpacing = 8
 
-        self.collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        self.collectionView.translatesAutoresizingMaskIntoConstraints = false
-
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.translatesAutoresizingMaskIntoConstraints = false
+        cv.backgroundColor = .systemBackground
+        cv.dataSource = self
+        cv.delegate = self
+        cv.register(
+            PhotosCollectionViewCell.self,
+            forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseId
+        )
+        return cv
+    }()
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+
         title = "Photo Gallery"
+        view.backgroundColor = .systemBackground
 
         setupViews()
         setupConstraints()
-        setupCollection()
+        loadSourceImages()
+
+        // Сначала показываем обычные фото без обработки
+        displayedImages = sourceImages
+        collectionView.reloadData()
+
+        // Один активный пример обработки
+        runProcessingExample()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -59,21 +66,87 @@ final class PhotosViewController: UIViewController {
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 
-    private func setupCollection() {
-        collectionView.backgroundColor = .systemBackground
-        collectionView.dataSource = self
-        collectionView.delegate = self
+    // MARK: - Images
 
-        collectionView.register(
-            PhotosCollectionViewCell.self,
-            forCellWithReuseIdentifier: PhotosCollectionViewCell.reuseIdentifier
+    private func loadSourceImages() {
+        let names = [
+            "photo_1", "photo_2", "photo_3",
+            "photo_4", "photo_5", "photo_6",
+            "photo_7", "photo_8", "photo_9",
+            "photo_10", "photo_11", "photo_12"
+        ]
+
+        sourceImages = names.compactMap { UIImage(named: $0) }
+    }
+
+    // MARK: - Processing
+
+    private func runProcessingExample() {
+        guard !sourceImages.isEmpty else { return }
+
+        processImages(
+            images: sourceImages,
+            qos: QualityOfService.userInitiated,
+            filter: ColorFilter.noir
         )
+
+        /*
+        processImages(
+            images: sourceImages,
+            qos: QualityOfService.utility,
+            filter: ColorFilter.chrome
+        )
+
+        processImages(
+            images: Array(sourceImages.prefix(6)),
+            qos: QualityOfService.background,
+            filter: ColorFilter.fade
+        )
+        */
+    }
+
+    private func processImages(
+        images: [UIImage],
+        qos: QualityOfService,
+        filter: ColorFilter
+    ) {
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        ImageProcessor().processImagesOnThread(
+            sourceImages: images,
+            filter: filter,
+            qos: qos
+        ) { [weak self] processedImages in
+            guard let self else { return }
+
+            let endTime = CFAbsoluteTimeGetCurrent()
+            let elapsed = endTime - startTime
+
+            print("qos: \(qos), images: \(images.count), filter: \(filter), time: \(elapsed) sec")
+
+            let uiImages = processedImages.compactMap { cgImage -> UIImage? in
+                guard let cgImage else { return nil }
+                return UIImage(cgImage: cgImage)
+            }
+
+            DispatchQueue.main.async {
+                self.displayedImages = uiImages
+                self.collectionView.reloadData()
+            }
+        }
+
+        /*
+         Примеры комментариев для ДЗ после замеров:
+         // userInitiated, 12 images, filter noir — 0.84 sec
+         // utility, 12 images, filter chrome — 1.31 sec
+         // background, 6 images, filter fade — 0.92 sec
+        */
     }
 }
 
@@ -83,18 +156,20 @@ extension PhotosViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        photoNames.count
+        displayedImages.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: PhotosCollectionViewCell.reuseIdentifier,
+            withReuseIdentifier: PhotosCollectionViewCell.reuseId,
             for: indexPath
         ) as? PhotosCollectionViewCell else {
             return UICollectionViewCell()
         }
-        cell.configure(with: photoNames[indexPath.item])
+
+        cell.configure(with: displayedImages[indexPath.item])
         return cell
     }
 }
@@ -105,43 +180,11 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
-                        insetForSectionAt section: Int) -> UIEdgeInsets {
-        UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-    }
-
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        8
-    }
-
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        8
-    }
-
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
 
-        let insets = self.collectionView(
-            collectionView,
-            layout: collectionViewLayout,
-            insetForSectionAt: indexPath.section
-        )
-        let spacing = self.collectionView(
-            collectionView,
-            layout: collectionViewLayout,
-            minimumInteritemSpacingForSectionAt: indexPath.section
-        )
-
-        let totalHorizontalInset = insets.left + insets.right
-        let totalSpacing = spacing * 2
-        let width = collectionView.bounds.width - totalHorizontalInset - totalSpacing
-        let itemWidth = floor(width / 3)
-
-        return CGSize(width: itemWidth, height: itemWidth)
+        let spacing: CGFloat = 8
+        let totalSpacing = spacing * 2 + spacing * 2
+        let side = (collectionView.bounds.width - totalSpacing) / 3
+        return CGSize(width: side, height: side)
     }
 }
-
